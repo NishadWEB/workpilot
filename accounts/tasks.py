@@ -1,7 +1,8 @@
 import os
 from django.core.mail import send_mail, send_mass_mail
 from celery import shared_task
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 @shared_task
 def send_welcome_email(username, to_email):
@@ -38,3 +39,21 @@ def send_morning_reminder():
         messages.append((subject, message, from_email, recipient_list))
 
     send_mass_mail(tuple(messages), fail_silently=True)
+
+
+@shared_task
+def send_reset_link(url, to_email):
+    subject = "Password-Reset email"
+    message = (
+        f"Click the below link to reset your password\n\n"
+        f"{url}"
+        "\n\nLink expires in 15 minutes."
+    )
+
+    return send_mail(
+        subject=subject,
+        message=message,
+        from_email=None,
+        recipient_list=[to_email],
+        fail_silently=True
+    )

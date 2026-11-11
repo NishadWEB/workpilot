@@ -1,12 +1,20 @@
 from django.shortcuts import render
-from django.contrib.auth.models import User, Group
-from django.db import transaction
+from django.contrib.auth.models import Group
+from django.db import transaction, IntegrityError
 from rest_framework import generics
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
+from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
 from .serializers import UserSerializer, UserDetailSerializer
 from .tasks import send_welcome_email
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes
+from .tasks import send_reset_link
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 
 class RegisterView(generics.CreateAPIView):
@@ -35,7 +43,11 @@ class RegisterView(generics.CreateAPIView):
         return Response({"message": "Registered successfully."}, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_create(self, serializer):
-        user = serializer.save()
+        try:
+            user = serializer.save()
+        except IntegrityError:
+            return Response({"message": "User with email id already exists."}, status=status.HTTP_409_CONFLICT)
+        
         member_grp = Group.objects.get(name='MEMBER')
         user.groups.add(member_grp)
 
@@ -74,3 +86,49 @@ class DetailView(generics.RetrieveUpdateDestroyAPIView):
         user.is_active = False
         user.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+def getPasswordTokenGenerator():
+    return PasswordResetTokenGenerator()
+
+class GeneratePasswordResetLinkView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({"message": "User with this email id does'nt exist."}, status=status.HTTP_404_NOT_FOUND)
+
+        token_generator = getPasswordTokenGenerator()
+        token = token_generator.make_token(user)
+        user_id = urlsafe_base64_encode(force_bytes(user.id))
+        url = f'http://127.0.0.1:8000/password?uid={user_id}&token={token}'
+        send_reset_link.delay(url, email)
+        return Response({"message": "Click the link sent via email to reset the password"}, status=status.HTTP_200_OK)
+
+
+class ResetPasswordView(APIView):
+    def post(self, request):
+        uid = request.query_params.get('uid')
+        token = request.query_params.get('token')
+
+        user_id = int(urlsafe_base64_decode(uid).decode())
+
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"message": "User does'nt exist."}, status=status.HTTP_404_NOT_FOUND)
+
+        token_generator = getPasswordTokenGenerator()
+        token_generator.check_token(user, token)
+
+        new_password = request.data.get('new_password')
+        confirm_password = request.data.get('confirm_password')
+
+        if new_password != confirm_password:
+            raise ValidationError("Passwords does'nt match!")
+
+        user.set_password(new_password)
+        user.save()
+        return Response({"message": "Password updated successfully"}, status=status.HTTP_200_OK)
+        

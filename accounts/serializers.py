@@ -1,7 +1,65 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
+from rest_framework.exceptions import AuthenticationFailed
+from django.contrib.auth import get_user_model
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
+def get_user_role(user):
+    if user.groups.filter(name="MANAGER").exists():
+        return "MANAGER"
+
+    if user.groups.filter(name="MEMBER").exists():
+        return "MEMBER"
+
+    raise AuthenticationFailed("User does not have a valid WorkPilot role.")
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token['role'] = get_user_role(user)
+        token['username'] = user.username
+        return token
+
+
+class CustomTokenRefreshSerializer(TokenRefreshSerializer):
+
+    def validate(self, attrs):
+
+        # 1. Read and validate the incoming refresh token
+        refresh = RefreshToken(attrs["refresh"])
+
+        # 2. Extract the user ID from the token
+        user_id = refresh.payload.get('user_id')
+
+        # 3. Retrieve the current user from the database
+        User = get_user_model()
+
+        try:
+            user = User.objects.get(id=user_id)
+        except (User.DoesNotExist, ValueError, TypeError):
+            raise AuthenticationFailed("User not found.")
+
+        # 4. Check whether the user is active
+        if not user.is_active:
+            raise AuthenticationFailed("User account is inactive.")
+
+        # 5. Get the user's current role from Django Groups
+        role = get_user_role(user)
+
+        # 6. Update claims in the incoming refresh token
+        refresh["role"] = role
+        refresh["username"] = user.username
+
+        # 7. Pass the updated token to Simple JWT's original implementation
+        attrs["refresh"] = str(refresh)
+
+        return super().validate(attrs)
+
+    
 class UserSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True)
     confirm_password = serializers.CharField(write_only=True, required=True)
@@ -41,17 +99,3 @@ class UserDetailSerializer(serializers.ModelSerializer):
             'date_joined': {'read_only': True},
         }
 
-
-class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-        group = user.groups.all()
-        role = None
-
-        if group:
-            role = group[0].name
-
-        token['role'] = role
-        print(token['role'])
-        return token

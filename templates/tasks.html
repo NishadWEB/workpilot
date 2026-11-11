@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Tasks · WorkPilot{% endblock %}
+{% block page_heading %}Tasks{% endblock %}
+
+{% block content %}
+<!-- Top Filter & Create Task Action Card -->
+<div class="wp-card">
+    <div class="wp-card-header">
+        <div>
+            <h2 class="wp-card-title">Scoped Tasks</h2>
+            <div class="small text-muted" id="wpTasksCountLabel">Loading visible tasks...</div>
+        </div>
+
+        <!-- Global MANAGER Only: Create Task Button -->
+        <button
+            type="button"
+            class="btn btn-wp-primary d-none"
+            data-wp-manager-only
+            data-bs-toggle="modal"
+            data-bs-target="#wpCreateTaskModal"
+        >
+            + Create Task
+        </button>
+    </div>
+
+    <!-- Search & Filter Controls (Section 15.2 & 18) -->
+    <form id="wpTaskFilterForm" class="row g-2 align-items-end">
+        <div class="col-12 col-md-4">
+            <label for="wpTaskSearchInput" class="form-label">Search Title / Description</label>
+            <input
+                type="text"
+                id="wpTaskSearchInput"
+                class="form-control"
+                placeholder="Search tasks..."
+            >
+        </div>
+        <div class="col-12 col-sm-4 col-md-2">
+            <label for="wpTaskProjectFilter" class="form-label">Project</label>
+            <select id="wpTaskProjectFilter" class="form-select">
+                <option value="">All Projects</option>
+            </select>
+        </div>
+        <div class="col-6 col-sm-4 col-md-2">
+            <label for="wpTaskStatusFilter" class="form-label">Status</label>
+            <select id="wpTaskStatusFilter" class="form-select">
+                <option value="">All Statuses</option>
+                <option value="PENDING">PENDING</option>
+                <option value="IN_PROGRESS">IN_PROGRESS</option>
+                <option value="COMPLETED">COMPLETED</option>
+            </select>
+        </div>
+        <div class="col-6 col-sm-4 col-md-2">
+            <label for="wpTaskPriorityFilter" class="form-label">Priority</label>
+            <select id="wpTaskPriorityFilter" class="form-select">
+                <option value="">All Priorities</option>
+                <option value="LOW">LOW</option>
+                <option value="MEDIUM">MEDIUM</option>
+                <option value="HIGH">HIGH</option>
+            </select>
+        </div>
+        <div class="col-12 col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-wp-primary flex-grow-1">Filter</button>
+            <button type="button" id="wpTaskFilterResetBtn" class="btn btn-wp-secondary">Reset</button>
+        </div>
+    </form>
+</div>
+
+<!-- Tasks Table Card -->
+<div class="wp-card">
+    <div id="wpTasksLoading" class="wp-loading-state">
+        <div class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></div>
+        <span>Fetching tasks...</span>
+    </div>
+
+    <div id="wpTasksEmpty" class="wp-empty-state d-none">
+        <div class="fw-bold mb-1">No tasks available</div>
+        <div class="small">No tasks matched your current filters or assigned scope.</div>
+    </div>
+
+    <div id="wpTasksTableWrapper" class="wp-table-container d-none">
+        <table class="wp-table">
+            <thead>
+                <tr>
+                    <th>Task</th>
+                    <th>Project</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Assignee</th>
+                    <th>Due Date</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody id="wpTasksTableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Pagination Controls -->
+    <div id="wpTasksPagination" class="d-flex justify-content-end gap-2 mt-3 d-none">
+        <button type="button" id="wpTasksPrevBtn" class="btn btn-sm btn-wp-secondary" disabled>
+            ← Previous Page
+        </button>
+        <button type="button" id="wpTasksNextBtn" class="btn btn-sm btn-wp-secondary" disabled>
+            Next Page →
+        </button>
+    </div>
+</div>
+
+<!-- Create Task Modal (Section 15.3: Do not send status or created_by; assignee must be project MEMBER) -->
+<div class="modal fade" id="wpCreateTaskModal" tabindex="-1" aria-labelledby="wpCreateTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="wpCreateTaskForm" novalidate>
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="wpCreateTaskModalLabel">Create &amp; Assign Task</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="wpCreateTaskModalNotice"></div>
+
+                    <div class="mb-3">
+                        <label for="wpCreateTaskTitle" class="form-label">Task Title (Max 100 characters)</label>
+                        <input
+                            type="text"
+                            id="wpCreateTaskTitle"
+                            name="title"
+                            class="form-control"
+                            maxlength="100"
+                            placeholder="e.g. Implement JWT authentication"
+                            required
+                        >
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="wpCreateTaskDesc" class="form-label">Description (Max 250 characters)</label>
+                        <textarea
+                            id="wpCreateTaskDesc"
+                            name="description"
+                            class="form-control"
+                            rows="3"
+                            maxlength="250"
+                            placeholder="Provide clear task requirements..."
+                            required
+                        ></textarea>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-sm-6">
+                            <label for="wpCreateTaskProjectSelect" class="form-label">Project</label>
+                            <select id="wpCreateTaskProjectSelect" name="project_id" class="form-select" required>
+                                <option value="">Select a project...</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <label for="wpCreateTaskAssigneeSelect" class="form-label">Assignee (Project MEMBER)</label>
+                            <select id="wpCreateTaskAssigneeSelect" name="assignee" class="form-select" required>
+                                <option value="">Select a project first...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-sm-6">
+                            <label for="wpCreateTaskPriority" class="form-label">Priority</label>
+                            <select id="wpCreateTaskPriority" name="priority" class="form-select">
+                                <option value="LOW">LOW</option>
+                                <option value="MEDIUM" selected>MEDIUM</option>
+                                <option value="HIGH">HIGH</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <label for="wpCreateTaskDueDate" class="form-label">Due Date</label>
+                            <input
+                                type="date"
+                                id="wpCreateTaskDueDate"
+                                name="due_date"
+                                class="form-control"
+                                required
+                            >
+                        </div>
+                    </div>
+                    <div class="form-text mt-2">
+                        Initial status defaults to <strong>PENDING</strong> and creator is assigned automatically by the backend.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-wp-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" id="wpCreateTaskSubmitBtn" class="btn btn-wp-primary">
+                        Create Task
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/tasks.js' %}"></script>
+{% endblock %}

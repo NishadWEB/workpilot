@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Task Detail · WorkPilot{% endblock %}
+{% block page_heading %}Task Detail &amp; Discussion{% endblock %}
+
+{% block content %}
+<div id="wpTaskDetailRoot" data-task-id="{{ task_id }}">
+    <div class="mb-3">
+        <a href="{% url 'frontend_tasks' %}" class="btn btn-sm btn-wp-secondary">
+            ← Back to Tasks
+        </a>
+    </div>
+
+    <!-- Loading State -->
+    <div id="wpTaskDetailLoading" class="wp-loading-state">
+        <div class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></div>
+        <span>Loading task details and comments...</span>
+    </div>
+
+    <!-- 404 / Inaccessible State -->
+    <div id="wpTaskDetailNotFound" class="wp-empty-state d-none">
+        <h2 class="h5 fw-bold mb-2">Task Not Found or Outside Scoped Visibility</h2>
+        <p class="small mb-3">This task does not exist or is not assigned to you / your managed projects.</p>
+        <a href="{% url 'frontend_tasks' %}" class="btn btn-sm btn-wp-primary">Return to Tasks</a>
+    </div>
+
+    <!-- Task Content & Chat Discussion -->
+    <div id="wpTaskDetailContent" class="d-none">
+        <div class="row g-4">
+            <!-- Left Column: Task Metadata & Status Controls -->
+            <div class="col-12 col-lg-5">
+                <div class="wp-card">
+                    <div class="wp-card-header">
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <span id="wpTaskStatusBadge" class="wp-badge wp-badge-PENDING">PENDING</span>
+                            <span id="wpTaskPriorityBadge" class="wp-badge wp-badge-MEDIUM">MEDIUM</span>
+                        </div>
+
+                        <!-- Manager Edit / Delete Controls -->
+                        <div class="d-flex gap-2 d-none" data-wp-manager-only>
+                            <button
+                                type="button"
+                                class="btn btn-sm btn-wp-secondary"
+                                data-bs-toggle="modal"
+                                data-bs-target="#wpEditTaskModal"
+                            >
+                                ✎ Edit
+                            </button>
+                            <button
+                                type="button"
+                                id="wpDeleteTaskBtn"
+                                class="btn btn-sm btn-wp-danger"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+
+                    <h2 id="wpTaskTitleHeading" class="h5 fw-bold text-wrap-safe mb-2">Task Title</h2>
+                    <p id="wpTaskDescriptionText" class="text-wrap-safe mb-4">—</p>
+
+                    <div class="border-top pt-3 small">
+                        <div class="d-flex justify-content-between py-1">
+                            <span class="text-muted">Project:</span>
+                            <a href="#" id="wpTaskProjectLink" class="fw-semibold text-wrap-safe">—</a>
+                        </div>
+                        <div class="d-flex justify-content-between py-1">
+                            <span class="text-muted">Assignee:</span>
+                            <span id="wpTaskAssigneeText" class="fw-semibold text-wrap-safe">—</span>
+                        </div>
+                        <div class="d-flex justify-content-between py-1">
+                            <span class="text-muted">Created By:</span>
+                            <span id="wpTaskCreatorText" class="text-wrap-safe">—</span>
+                        </div>
+                        <div class="d-flex justify-content-between py-1">
+                            <span class="text-muted">Due Date:</span>
+                            <span id="wpTaskDueDateText" class="fw-semibold">—</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assignee Status Control Card (Section 15.7: PATCH /api/v1/tasks/{task_id}/status/ assignee only) -->
+                <div class="wp-card">
+                    <h3 class="wp-card-title mb-2">Task Status Control</h3>
+                    <div id="wpAssigneeStatusPanel" class="d-none">
+                        <p class="small text-muted mb-3">
+                            You are the assigned member for this task. Update your progress status below:
+                        </p>
+                        <form id="wpAssigneeStatusForm" class="d-flex flex-column flex-sm-row gap-2">
+                            <select id="wpAssigneeStatusSelect" class="form-select">
+                                <option value="PENDING">PENDING</option>
+                                <option value="IN_PROGRESS">IN_PROGRESS</option>
+                                <option value="COMPLETED">COMPLETED</option>
+                            </select>
+                            <button type="submit" id="wpAssigneeStatusSubmitBtn" class="btn btn-wp-primary text-nowrap">
+                                Update Status
+                            </button>
+                        </form>
+                    </div>
+                    <div id="wpNonAssigneeStatusNote" class="small text-muted d-none">
+                        Only the assigned user can change the task status via <code>/status/</code>.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Chat-Style Task Comments (Section 6 & 16) -->
+            <div class="col-12 col-lg-7">
+                <div class="wp-card">
+                    <div class="wp-card-header">
+                        <div>
+                            <h3 class="wp-card-title">Task Discussion</h3>
+                            <div class="small text-muted">
+                                Oldest-first chat thread · Your messages appear on the right
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="wpCommentsLoading" class="wp-loading-state d-none">
+                        <div class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></div>
+                        <span>Loading discussion...</span>
+                    </div>
+
+                    <div id="wpCommentsRestrictedNote" class="wp-empty-state d-none">
+                        <div class="fw-semibold mb-1">Discussion Restricted</div>
+                        <div class="small">Only the task creator or the task assignee can view and post comments on this task.</div>
+                    </div>
+
+                    <div class="wp-chat-container">
+                        <!-- Pagination Bar for loading additional comment pages -->
+                        <div id="wpChatPaginationBar" class="wp-chat-history-bar d-none">
+                            <button type="button" id="wpChatLoadMoreBtn" class="btn btn-sm btn-wp-secondary">
+                                Load More Comments
+                            </button>
+                        </div>
+
+                        <!-- Chat Messages Stream -->
+                        <div id="wpChatMessagesContainer" class="wp-chat-messages" aria-live="polite"></div>
+
+                        <!-- Message Composer -->
+                        <form id="wpCommentComposerForm" class="wp-chat-composer" novalidate>
+                            <textarea
+                                id="wpCommentContentInput"
+                                class="form-control"
+                                rows="2"
+                                placeholder="Write a message..."
+                                aria-label="Comment message"
+                                required
+                            ></textarea>
+                            <button type="submit" id="wpCommentSendBtn" class="btn btn-wp-primary px-4">
+                                Send
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Manager Edit Task Modal (Section 15.5: Sends project_id + assignee together, omits status and created_by) -->
+<div class="modal fade" id="wpEditTaskModal" tabindex="-1" aria-labelledby="wpEditTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="wpEditTaskForm" novalidate>
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="wpEditTaskModalLabel">Edit Task Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="wpEditTaskModalNotice"></div>
+
+                    <div class="mb-3">
+                        <label for="wpEditTaskTitle" class="form-label">Title (Max 100 characters)</label>
+                        <input
+                            type="text"
+                            id="wpEditTaskTitle"
+                            name="title"
+                            class="form-control"
+                            maxlength="100"
+                            required
+                        >
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="wpEditTaskDesc" class="form-label">Description (Max 250 characters)</label>
+                        <textarea
+                            id="wpEditTaskDesc"
+                            name="description"
+                            class="form-control"
+                            rows="3"
+                            maxlength="250"
+                            required
+                        ></textarea>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-sm-6">
+                            <label for="wpEditTaskProjectSelect" class="form-label">Project</label>
+                            <select id="wpEditTaskProjectSelect" name="project_id" class="form-select" required></select>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <label for="wpEditTaskAssigneeSelect" class="form-label">Assignee (Project MEMBER)</label>
+                            <select id="wpEditTaskAssigneeSelect" name="assignee" class="form-select" required></select>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-sm-6">
+                            <label for="wpEditTaskPriority" class="form-label">Priority</label>
+                            <select id="wpEditTaskPriority" name="priority" class="form-select">
+                                <option value="LOW">LOW</option>
+                                <option value="MEDIUM">MEDIUM</option>
+                                <option value="HIGH">HIGH</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <label for="wpEditTaskDueDate" class="form-label">Due Date</label>
+                            <input type="date" id="wpEditTaskDueDate" name="due_date" class="form-control" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-wp-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" id="wpEditTaskSubmitBtn" class="btn btn-wp-primary">Save Task Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Author-Only Edit Comment Modal (Section 16.4: PATCH content only) -->
+<div class="modal fade" id="wpEditCommentModal" tabindex="-1" aria-labelledby="wpEditCommentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="wpEditCommentForm" novalidate>
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="wpEditCommentModalLabel">Edit Your Comment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="wpEditCommentModalNotice"></div>
+                    <input type="hidden" id="wpEditCommentIdInput">
+                    <div class="mb-2">
+                        <label for="wpEditCommentContentInput" class="form-label">Comment Text</label>
+                        <textarea
+                            id="wpEditCommentContentInput"
+                            class="form-control"
+                            rows="3"
+                            required
+                        ></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-wp-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" id="wpEditCommentSubmitBtn" class="btn btn-wp-primary">Save Comment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/task_detail.js' %}"></script>
+{% endblock %}

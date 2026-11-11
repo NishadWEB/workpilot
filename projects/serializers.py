@@ -1,9 +1,11 @@
-from django.contrib.auth.models import User
 from django.db import IntegrityError
 from rest_framework import serializers
 from .models import Project, ProjectMembership, Task, TaskComment
 from datetime import date
 from accounts.serializers import UserSerializer
+
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 
 class AvailableUserSerializer(serializers.ModelSerializer):

@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard · WorkPilot{% endblock %}
+{% block page_heading %}Dashboard Overview{% endblock %}
+
+{% block content %}
+<!-- Welcome & Role Summary Bar -->
+<div class="wp-card d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <div>
+        <h2 class="h5 fw-bold mb-1">
+            Welcome, <span id="wpDashboardWelcomeUser" data-wp-username>User</span>
+        </h2>
+        <p class="small text-muted mb-0">
+            Global Application Role:
+            <span id="wpDashboardWelcomeRole" class="wp-role-badge" data-wp-role>MEMBER</span>
+            · Statistics are sourced directly from the project statistics API.
+        </p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <button type="button" id="wpDashboardRefreshBtn" class="btn btn-sm btn-wp-secondary">
+            ↻ Refresh Statistics
+        </button>
+        <a href="{% url 'frontend_projects' %}" class="btn btn-sm btn-wp-primary">
+            Manage Projects
+        </a>
+        <a href="{% url 'frontend_tasks' %}" class="btn btn-sm btn-wp-secondary">
+            View My Tasks
+        </a>
+    </div>
+</div>
+
+<!-- Loading State -->
+<div id="wpDashboardLoading" class="wp-loading-state">
+    <div class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></div>
+    <span>Loading dashboard statistics...</span>
+</div>
+
+<!-- Main Dashboard Content -->
+<div id="wpDashboardContent" class="d-none">
+    <!-- Summary Metric Cards Grid (Section 8 & 17.2) -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="wp-stat-card">
+                <div class="wp-stat-label">Projects</div>
+                <div class="wp-stat-value" id="wpStatTotalProjects">0</div>
+                <div class="wp-stat-sub">Accessible projects</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="wp-stat-card">
+                <div class="wp-stat-label">Total Tasks</div>
+                <div class="wp-stat-value" id="wpStatTotalTasks">0</div>
+                <div class="wp-stat-sub">Across loaded projects</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="wp-stat-card">
+                <div class="wp-stat-label">Pending</div>
+                <div class="wp-stat-value" id="wpStatPendingTasks">0</div>
+                <div class="wp-stat-sub">Awaiting start</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="wp-stat-card">
+                <div class="wp-stat-label">In Progress</div>
+                <div class="wp-stat-value" id="wpStatInProgressTasks">0</div>
+                <div class="wp-stat-sub">Currently active</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="wp-stat-card">
+                <div class="wp-stat-label">Completed</div>
+                <div class="wp-stat-value" id="wpStatCompletedTasks">0</div>
+                <div class="wp-stat-sub">Finished tasks</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="wp-stat-card">
+                <div class="wp-stat-label">Overdue</div>
+                <div class="wp-stat-value" id="wpStatOverdueTasks">0</div>
+                <div class="wp-stat-sub">Past due_date</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Per-Project Statistics Breakdown Table -->
+    <div class="wp-card">
+        <div class="wp-card-header">
+            <h3 class="wp-card-title">Project Statistics Breakdown</h3>
+            <div class="d-flex gap-2">
+                <a href="{% url 'frontend_projects' %}" class="btn btn-sm btn-wp-secondary">All Projects →</a>
+            </div>
+        </div>
+
+        <div id="wpDashboardEmpty" class="wp-empty-state d-none">
+            <div class="fw-bold mb-1">No projects found</div>
+            <p class="small mb-3">You are not associated with any active projects yet.</p>
+            <a href="{% url 'frontend_projects' %}" class="btn btn-sm btn-wp-primary" data-wp-manager-only>
+                + Create Your First Project
+            </a>
+        </div>
+
+        <div class="wp-table-container">
+            <table class="wp-table">
+                <thead>
+                    <tr>
+                        <th>Project</th>
+                        <th>Status</th>
+                        <th>Deadline</th>
+                        <th>Manager &amp; Team</th>
+                        <th class="text-center">Total</th>
+                        <th class="text-center">Pending</th>
+                        <th class="text-center">In Progress</th>
+                        <th class="text-center">Completed</th>
+                        <th class="text-center">Overdue</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="wpDashboardProjectsBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}

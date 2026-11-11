@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Projects · WorkPilot{% endblock %}
+{% block page_heading %}Projects{% endblock %}
+
+{% block content %}
+<!-- Top Action & Search/Filter Card -->
+<div class="wp-card">
+    <div class="wp-card-header">
+        <div>
+            <h2 class="wp-card-title">Accessible Projects</h2>
+            <div class="small text-muted" id="wpProjectsCountLabel">Loading projects...</div>
+        </div>
+
+        <!-- Global MANAGER Only: Create Project Button -->
+        <button
+            type="button"
+            class="btn btn-wp-primary d-none"
+            data-wp-manager-only
+            data-bs-toggle="modal"
+            data-bs-target="#wpCreateProjectModal"
+        >
+            + New Project
+        </button>
+    </div>
+
+    <!-- Search, Filter & Ordering Controls (Section 13.1 & 18) -->
+    <form id="wpProjectFilterForm" class="row g-2 align-items-end">
+        <div class="col-12 col-md-4">
+            <label for="wpProjectSearchInput" class="form-label">Search Name / Description</label>
+            <input
+                type="text"
+                id="wpProjectSearchInput"
+                class="form-control"
+                placeholder="Search projects..."
+            >
+        </div>
+        <div class="col-6 col-md-2">
+            <label for="wpProjectStatusFilter" class="form-label">Status</label>
+            <select id="wpProjectStatusFilter" class="form-select">
+                <option value="">All Statuses</option>
+                <option value="ACTIVE">ACTIVE</option>
+                <option value="COMPLETED">COMPLETED</option>
+                <option value="ARCHIVED">ARCHIVED</option>
+            </select>
+        </div>
+        <div class="col-6 col-md-2">
+            <label for="wpProjectDeadlineFilter" class="form-label">Deadline</label>
+            <input type="date" id="wpProjectDeadlineFilter" class="form-control">
+        </div>
+        <div class="col-6 col-md-2">
+            <label for="wpProjectOrderingSelect" class="form-label">Order By</label>
+            <select id="wpProjectOrderingSelect" class="form-select">
+                <option value="-created_at">Newest First</option>
+                <option value="created_at">Oldest First</option>
+                <option value="deadline">Deadline (Asc)</option>
+                <option value="-deadline">Deadline (Desc)</option>
+                <option value="status">Status (A–Z)</option>
+                <option value="-status">Status (Z–A)</option>
+            </select>
+        </div>
+        <div class="col-6 col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-wp-primary flex-grow-1">Apply</button>
+            <button type="button" id="wpProjectFilterResetBtn" class="btn btn-wp-secondary">Reset</button>
+        </div>
+    </form>
+</div>
+
+<!-- Projects Table Card -->
+<div class="wp-card">
+    <div id="wpProjectsLoading" class="wp-loading-state">
+        <div class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></div>
+        <span>Fetching projects...</span>
+    </div>
+
+    <div id="wpProjectsEmpty" class="wp-empty-state d-none">
+        <div class="fw-bold mb-1">No projects found</div>
+        <div class="small">Try adjusting your search filters or create a new project if you are a global Manager.</div>
+    </div>
+
+    <div id="wpProjectsTableWrapper" class="wp-table-container d-none">
+        <table class="wp-table">
+            <thead>
+                <tr>
+                    <th>Project Name</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Deadline</th>
+                    <th>Members</th>
+                    <th>Created</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="wpProjectsTableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Pagination Bar -->
+    <div id="wpProjectsPagination" class="d-flex align-items-center justify-content-end gap-2 mt-3 d-none">
+        <button type="button" id="wpProjectsPrevBtn" class="btn btn-sm btn-wp-secondary" disabled>
+            ← Previous Page
+        </button>
+        <button type="button" id="wpProjectsNextBtn" class="btn btn-sm btn-wp-secondary" disabled>
+            Next Page →
+        </button>
+    </div>
+</div>
+
+<!-- Create Project Modal (Section 13.2: Global Manager only, name max 10 chars, do not send users) -->
+<div class="modal fade" id="wpCreateProjectModal" tabindex="-1" aria-labelledby="wpCreateProjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="wpCreateProjectForm" novalidate>
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="wpCreateProjectModalLabel">Create New Project</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="wpCreateProjectModalNotice"></div>
+
+                    <div class="mb-3">
+                        <label for="wpCreateProjName" class="form-label">Project Name (Max 30 characters)</label>
+                        <input
+                            type="text"
+                            id="wpCreateProjName"
+                            name="name"
+                            class="form-control"
+                            maxlength="30"
+                            placeholder="e.g. WorkPilot"
+                            required
+                        >
+                        <div class="form-text">Unique project identifier, maximum 30 characters.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="wpCreateProjDesc" class="form-label">Description</label>
+                        <textarea
+                            id="wpCreateProjDesc"
+                            name="description"
+                            class="form-control"
+                            rows="3"
+                            placeholder="Describe the project scope and goals..."
+                            required
+                        ></textarea>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-sm-6">
+                            <label for="wpCreateProjDeadline" class="form-label">Deadline</label>
+                            <input
+                                type="date"
+                                id="wpCreateProjDeadline"
+                                name="deadline"
+                                class="form-control"
+                                required
+                            >
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <label for="wpCreateProjStatus" class="form-label">Initial Status</label>
+                            <select id="wpCreateProjStatus" name="status" class="form-select">
+                                <option value="ACTIVE" selected>ACTIVE</option>
+                                <option value="COMPLETED">COMPLETED</option>
+                                <option value="ARCHIVED">ARCHIVED</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-wp-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" id="wpCreateProjectSubmitBtn" class="btn btn-wp-primary">
+                        Create Project
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/projects.js' %}"></script>
+{% endblock %}

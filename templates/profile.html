@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}My Profile · WorkPilot{% endblock %}
+{% block page_heading %}Account Profile{% endblock %}
+
+{% block content %}
+<div id="wpProfileLoading" class="wp-loading-state">
+    <div class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></div>
+    <span>Loading your profile...</span>
+</div>
+
+<div id="wpProfileContent" class="row g-4 d-none">
+    <!-- Left Column: Read-Only Account Summary -->
+    <div class="col-12 col-lg-5">
+        <div class="wp-card">
+            <div class="wp-card-header">
+                <h2 class="wp-card-title">Account Summary</h2>
+                <span id="wpProfileRoleDisplay" class="wp-role-badge" data-wp-role>MEMBER</span>
+            </div>
+
+            <div class="small">
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">User ID</span>
+                    <span id="wpProfileIdText" class="fw-bold">—</span>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Username</span>
+                    <span id="wpProfileUsernameDisplay" class="fw-semibold text-wrap-safe">—</span>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Email</span>
+                    <span id="wpProfileEmailDisplay" class="text-wrap-safe">—</span>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Account Status</span>
+                    <span id="wpProfileActiveText" class="fw-semibold">Active</span>
+                </div>
+                <div class="d-flex justify-content-between py-2">
+                    <span class="text-muted">Date Joined</span>
+                    <span id="wpProfileDateJoinedText">—</span>
+                </div>
+            </div>
+
+            <div class="mt-3 p-2 rounded small" style="background-color: var(--wp-bg-subtle); color: var(--wp-text-secondary);">
+                <strong>Role &amp; Password Note:</strong> Global role promotions (MEMBER → MANAGER) are managed by an administrator in Django Admin and take effect automatically on your next token refresh. No password-change API endpoint is exposed by the current backend.
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Edit Username/Email & Deactivate Account -->
+    <div class="col-12 col-lg-7">
+        <div class="wp-card">
+            <div class="wp-card-header">
+                <h2 class="wp-card-title">Edit Profile Details</h2>
+            </div>
+
+            <form id="wpProfileEditForm" novalidate>
+                <div class="mb-3">
+                    <label for="wpProfileUsernameInput" class="form-label">Username</label>
+                    <input
+                        type="text"
+                        id="wpProfileUsernameInput"
+                        name="username"
+                        class="form-control"
+                        required
+                    >
+                </div>
+
+                <div class="mb-3">
+                    <label for="wpProfileEmailInput" class="form-label">Email Address</label>
+                    <input
+                        type="email"
+                        id="wpProfileEmailInput"
+                        name="email"
+                        class="form-control"
+                        required
+                    >
+                </div>
+
+                <button type="submit" id="wpProfileSaveBtn" class="btn btn-wp-primary">
+                    Save Profile Changes
+                </button>
+            </form>
+        </div>
+
+        <!-- Account Deactivation Card (Section 12.7: DELETE /api/v1/auth/users/me/ with red destructive button) -->
+        <div class="wp-card">
+            <div class="wp-card-header">
+                <h2 class="wp-card-title">Deactivate Account</h2>
+            </div>
+            <p class="small text-muted mb-3">
+                Deactivating your account marks your user record as inactive while retaining historical project and task records in the database. You will be signed out immediately.
+            </p>
+            <button type="button" id="wpDeactivateAccountBtn" class="btn btn-wp-danger">
+                Deactivate My Account
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/profile.js' %}"></script>
+{% endblock %}
