@@ -9,7 +9,7 @@ class Project(models.Model):
         COMPLETED = 'COMPLETED', 'Completed'
         ARCHIVED = 'ARCHIVED', 'Archived'
 
-    name = models.CharField(max_length=30, blank=False, unique=True)
+    name = models.CharField(max_length=30, blank=False)
     description = models.TextField()
 
     users = models.ManyToManyField(
@@ -27,6 +27,13 @@ class Project(models.Model):
     class Meta:
         db_table = 'projects'
         ordering = ['id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['name'],
+                condition=models.Q(is_available=True),
+                name='unique_active_project_name'
+            )
+        ]
 
     def __str__(self):
         return self.name

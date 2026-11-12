@@ -48,9 +48,10 @@ class AvailableUsersView(ListAPIView):
 
     def get_queryset(self):
         return User.objects.filter(
+            ~Q(groups__name='MANAGER'),
             is_active=True,
-            groups__name='MEMBER',
-            project_memberships__isnull=True
+            is_superuser=False,
+            # project_memberships__isnull=True
         ).distinct().order_by('id')
 
 
