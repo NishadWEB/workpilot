@@ -243,7 +243,7 @@
                     <td><span class="wp-badge wp-badge-${priority}">${priority}</span></td>
                     <td class="text-wrap-safe">
                         ${esc(assigneeName)}
-                        ${isAssignee ? '<span class="small fw-semibold text-primary">(You)</span>' : ""}
+                        ${isAssignee ? '<span class="wp-badge wp-badge-soft-orange ms-1">You</span>' : ""}
                     </td>
                     <td>${fmtDate(task.due_date)}</td>
                     <td class="text-end">

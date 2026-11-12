@@ -175,6 +175,9 @@ class ProjectView(ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         project = self.get_object()
         project.is_available = False
+
+        ProjectMembership.objects.filter(project_id=project.id).delete()
+        
         project.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 

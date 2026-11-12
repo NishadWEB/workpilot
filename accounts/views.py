@@ -51,6 +51,7 @@ class RegisterView(generics.CreateAPIView):
         member_grp = Group.objects.get(name='MEMBER')
         user.groups.add(member_grp)
 
+
 class DetailView(generics.RetrieveUpdateDestroyAPIView):
     """
     API endpoint for retrieving, updating, and deactivating user accounts.
@@ -87,8 +88,10 @@ class DetailView(generics.RetrieveUpdateDestroyAPIView):
         user.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 def getPasswordTokenGenerator():
     return PasswordResetTokenGenerator()
+
 
 class GeneratePasswordResetLinkView(APIView):
     def post(self, request):
@@ -131,4 +134,3 @@ class ResetPasswordView(APIView):
         user.set_password(new_password)
         user.save()
         return Response({"message": "Password updated successfully"}, status=status.HTTP_200_OK)
-        

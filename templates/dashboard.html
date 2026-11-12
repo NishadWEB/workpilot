@@ -21,7 +21,7 @@
         <button type="button" id="wpDashboardRefreshBtn" class="btn btn-sm btn-wp-secondary">
             ↻ Refresh Statistics
         </button>
-        <a href="{% url 'frontend_projects' %}" class="btn btn-sm btn-wp-primary">
+        <a href="{% url 'frontend_projects' %}" class="btn btn-sm btn-wp-accent">
             Manage Projects
         </a>
         <a href="{% url 'frontend_tasks' %}" class="btn btn-sm btn-wp-secondary">
@@ -76,11 +76,22 @@
             </div>
         </div>
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="wp-stat-card">
+            <div class="wp-stat-card wp-stat-card-highlight">
                 <div class="wp-stat-label">Overdue</div>
-                <div class="wp-stat-value" id="wpStatOverdueTasks">0</div>
+                <div class="wp-stat-value wp-stat-value-accent" id="wpStatOverdueTasks">0</div>
                 <div class="wp-stat-sub">Past due_date</div>
             </div>
+        </div>
+    </div>
+
+    <!-- Overall Completion Progress Indicator -->
+    <div class="wp-card py-3">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="small fw-bold">Overall Task Completion Progress</span>
+            <span class="wp-badge wp-badge-soft-orange" id="wpDashboardProgressPct">0% Completed</span>
+        </div>
+        <div class="wp-progress" role="progressbar" aria-label="Overall task completion progress">
+            <div id="wpDashboardProgressBar" class="wp-progress-bar" style="width: 0%;"></div>
         </div>
     </div>
 
@@ -96,7 +107,7 @@
         <div id="wpDashboardEmpty" class="wp-empty-state d-none">
             <div class="fw-bold mb-1">No projects found</div>
             <p class="small mb-3">You are not associated with any active projects yet.</p>
-            <a href="{% url 'frontend_projects' %}" class="btn btn-sm btn-wp-primary" data-wp-manager-only>
+            <a href="{% url 'frontend_projects' %}" class="btn btn-sm btn-wp-accent" data-wp-manager-only>
                 + Create Your First Project
             </a>
         </div>

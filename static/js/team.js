@@ -148,7 +148,7 @@
                 return `
                 <tr>
                     <td>
-                        <div class="fw-bold text-wrap-safe">${displayName} ${isSelf ? '<span class="small text-muted">(You)</span>' : ""}</div>
+                        <div class="fw-bold text-wrap-safe">${displayName} ${isSelf ? '<span class="wp-badge wp-badge-soft-orange ms-1">You</span>' : ""}</div>
                         <div class="small text-muted">User ID: #${member.id}</div>
                     </td>
                     <td class="text-wrap-safe">${email}</td>
@@ -404,9 +404,11 @@
             if (listEl) {
                 listEl.innerHTML = results
                     .map((u) => {
-                        const checked = selectedAvailableUserIds.has(Number(u.id)) ? "checked" : "";
+                        const isSelected = selectedAvailableUserIds.has(Number(u.id));
+                        const checked = isSelected ? "checked" : "";
+                        const selectedClass = isSelected ? " wp-item-selected" : "";
                         return `
-                        <label class="list-group-item d-flex align-items-center justify-content-between gap-2" style="background-color: var(--wp-bg-surface); color: var(--wp-text-primary); border-color: var(--wp-border); cursor: pointer;">
+                        <label class="list-group-item d-flex align-items-center justify-content-between gap-2${selectedClass}" style="background-color: var(--wp-bg-surface); color: var(--wp-text-primary); border-color: var(--wp-border); cursor: pointer;">
                             <div class="d-flex align-items-center gap-2">
                                 <input class="form-check-input mt-0" type="checkbox" value="${u.id}" data-available-user-checkbox ${checked}>
                                 <div>
@@ -422,10 +424,13 @@
                 listEl.querySelectorAll("[data-available-user-checkbox]").forEach((cb) => {
                     cb.addEventListener("change", () => {
                         const id = Number(cb.value);
+                        const labelEl = cb.closest(".list-group-item");
                         if (cb.checked) {
                             selectedAvailableUserIds.add(id);
+                            if (labelEl) labelEl.classList.add("wp-item-selected");
                         } else {
                             selectedAvailableUserIds.delete(id);
+                            if (labelEl) labelEl.classList.remove("wp-item-selected");
                         }
                         updateSelectedCountLabel();
                     });

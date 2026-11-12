@@ -130,10 +130,13 @@
         const ts = (stats && stats.task_statistics) || {};
         const team = (stats && stats.team) || {};
 
-        setText("wpProjStatTotalTasks", ts.total_tasks ?? 0);
+        const totalTasks = Number(ts.total_tasks ?? 0);
+        const completedTasks = Number(ts.completed_tasks ?? 0);
+
+        setText("wpProjStatTotalTasks", totalTasks);
         setText("wpProjStatPendingTasks", ts.pending_tasks ?? 0);
         setText("wpProjStatInProgressTasks", ts.in_progress_tasks ?? 0);
-        setText("wpProjStatCompletedTasks", ts.completed_tasks ?? 0);
+        setText("wpProjStatCompletedTasks", completedTasks);
         setText("wpProjStatOverdueTasks", ts.overdue_tasks ?? 0);
         setText(
             "wpProjStatTeamCount",
@@ -143,6 +146,13 @@
             "wpProjStatManagerName",
             team.manager && team.manager.username ? team.manager.username : "—"
         );
+
+        // Update project completion progress indicator
+        const pct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+        const progressBarEl = document.getElementById("wpProjectProgressBar");
+        const progressPctEl = document.getElementById("wpProjectProgressPct");
+        if (progressBarEl) progressBarEl.style.width = `${pct}%`;
+        if (progressPctEl) progressPctEl.textContent = `${pct}%`;
 
         // Pre-fill edit form fields
         const editForm = document.getElementById("wpEditProjectForm");

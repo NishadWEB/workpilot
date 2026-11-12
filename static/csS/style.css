@@ -1,7 +1,10 @@
 /* ==========================================================================
    WorkPilot Visual Design System & Responsive Stylesheet (style.css)
-   Palette rule: Strictly white & eye-friendly blue shades (Light) and
-   complementary dark slate & blue accents (Dark).
+   Palette rule:
+   1. Blue: Primary brand colour (navigation, headings, brand elements, links).
+   2. White: Primary background colour (clean, spacious surfaces).
+   3. Vibrant Orange (#FF7A36): Complementary accent colour for key CTAs,
+      active states, notifications, badges, progress indicators, and highlights.
    Red is reserved EXCLUSIVELY for destructive actions & delete confirmations.
    ========================================================================== */
 
@@ -20,6 +23,7 @@
     --wp-text-muted: #64748b;
     --wp-text-on-primary: #ffffff;
 
+    /* Primary Brand Blue (Preserved) */
     --wp-primary: #2563eb;
     --wp-primary-hover: #1d4ed8;
     --wp-primary-active: #1e40af;
@@ -29,11 +33,20 @@
     --wp-accent-sky: #0284c7;
     --wp-accent-teal: #0369a1;
 
+    /* Complementary Vibrant Orange Accent (#FF7A36) */
+    --wp-accent-orange: #FF7A36;
+    --wp-accent-orange-hover: #e86624;
+    --wp-accent-orange-active: #d15415;
+    --wp-accent-orange-soft: #fff4ed;
+    --wp-accent-orange-border: #ffc4a3;
+    --wp-accent-orange-text: #9a3412;
+    --wp-accent-orange-ring: rgba(255, 122, 54, 0.28);
+
     --wp-border: #d8e2ef;
     --wp-border-strong: #b6c8e0;
     --wp-focus-ring: rgba(37, 99, 235, 0.28);
 
-    /* Status & priority badges ( strictly blue / slate / navy shades — NO RED ) */
+    /* Status & priority badges */
     --wp-badge-active-bg: #dbeafe;
     --wp-badge-active-text: #1e40af;
     --wp-badge-completed-bg: #e0f2fe;
@@ -49,10 +62,10 @@
     --wp-badge-priority-low-text: #475569;
     --wp-badge-priority-med-bg: #e0f2fe;
     --wp-badge-priority-med-text: #0369a1;
-    --wp-badge-priority-high-bg: #1e3a8a;
+    --wp-badge-priority-high-bg: #FF7A36;
     --wp-badge-priority-high-text: #ffffff;
 
-    /* Alerts & feedback notices (blue-toned for non-destructive states) */
+    /* Alerts & feedback notices (blue-toned surface with orange attention indicator) */
     --wp-notice-bg: #eff6ff;
     --wp-notice-border: #93c5fd;
     --wp-notice-text: #1e3a8a;
@@ -104,6 +117,15 @@
     --wp-accent-sky: #38bdf8;
     --wp-accent-teal: #7dd3fc;
 
+    /* Complementary Vibrant Orange Accent (#FF7A36) */
+    --wp-accent-orange: #FF7A36;
+    --wp-accent-orange-hover: #ff8e52;
+    --wp-accent-orange-active: #e86624;
+    --wp-accent-orange-soft: rgba(255, 122, 54, 0.16);
+    --wp-accent-orange-border: rgba(255, 122, 54, 0.48);
+    --wp-accent-orange-text: #ff9d6b;
+    --wp-accent-orange-ring: rgba(255, 122, 54, 0.35);
+
     --wp-border: #223559;
     --wp-border-strong: #314b7a;
     --wp-focus-ring: rgba(59, 130, 246, 0.38);
@@ -123,7 +145,7 @@
     --wp-badge-priority-low-text: #cbd5e1;
     --wp-badge-priority-med-bg: #0c4a6e;
     --wp-badge-priority-med-text: #7dd3fc;
-    --wp-badge-priority-high-bg: #3b82f6;
+    --wp-badge-priority-high-bg: #FF7A36;
     --wp-badge-priority-high-text: #ffffff;
 
     --wp-notice-bg: #162847;
@@ -241,6 +263,20 @@ a:hover {
     justify-content: center;
     font-weight: 800;
     font-size: 1rem;
+    position: relative;
+}
+
+/* Small decorative orange accent dot on the brand icon */
+.wp-brand-icon::after {
+    content: "";
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--wp-accent-orange);
+    border: 2px solid var(--wp-bg-surface);
 }
 
 .wp-nav-list {
@@ -262,6 +298,7 @@ a:hover {
     color: var(--wp-text-secondary);
     font-weight: 500;
     text-decoration: none !important;
+    position: relative;
     transition: background-color 0.15s ease, color 0.15s ease;
 }
 
@@ -270,10 +307,26 @@ a:hover {
     color: var(--wp-primary);
 }
 
+/* Active navigation state: retains Blue brand fill & text with Vibrant Orange active indicator bar */
 .wp-nav-link.active {
     background-color: var(--wp-bg-active);
     color: var(--wp-primary);
     font-weight: 600;
+}
+
+.wp-nav-link.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 6px;
+    bottom: 6px;
+    width: 4px;
+    border-radius: 0 4px 4px 0;
+    background-color: var(--wp-accent-orange);
+}
+
+.wp-nav-link.active span:first-child {
+    color: var(--wp-accent-orange);
 }
 
 .wp-sidebar-footer {
@@ -339,6 +392,11 @@ a:hover {
     font-size: 0.85rem;
     color: var(--wp-text-primary);
     max-width: 240px;
+    transition: border-color 0.15s ease;
+}
+
+.wp-user-pill:hover {
+    border-color: var(--wp-accent-orange);
 }
 
 .wp-user-pill-name {
@@ -346,6 +404,17 @@ a:hover {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.wp-user-pill-name::before {
+    content: "";
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: var(--wp-accent-orange);
+    margin-right: 0.4rem;
+    vertical-align: middle;
 }
 
 .wp-role-badge {
@@ -410,6 +479,20 @@ a:hover {
     font-weight: 700;
     margin: 0;
     color: var(--wp-text-primary);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Small decorative orange accent bar beside section titles */
+.wp-card-title::before {
+    content: "";
+    display: inline-block;
+    width: 4px;
+    height: 1.05rem;
+    border-radius: 999px;
+    background-color: var(--wp-accent-orange);
+    flex-shrink: 0;
 }
 
 .wp-stat-card {
@@ -422,6 +505,19 @@ a:hover {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.wp-stat-card:hover {
+    border-color: var(--wp-primary-border);
+    box-shadow: var(--wp-shadow-md);
+}
+
+/* Highlighted stat card variant for attention metrics (e.g., Overdue / Active work) */
+.wp-stat-card-highlight {
+    border-top: 3px solid var(--wp-accent-orange);
 }
 
 .wp-stat-label {
@@ -440,10 +536,38 @@ a:hover {
     line-height: 1.2;
 }
 
+.wp-stat-value-accent {
+    color: var(--wp-accent-orange);
+}
+
 .wp-stat-sub {
     font-size: 0.8rem;
     color: var(--wp-text-muted);
     margin-top: 0.35rem;
+}
+
+/* Progress Indicators (Vibrant Orange emphasis on Blue/Slate track) */
+.wp-progress {
+    width: 100%;
+    height: 7px;
+    background-color: var(--wp-bg-subtle);
+    border: 1px solid var(--wp-border);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.wp-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--wp-primary) 0%, var(--wp-accent-orange) 100%);
+    border-radius: 999px;
+    transition: width 0.35s ease;
+}
+
+.wp-progress-bar-orange {
+    height: 100%;
+    background-color: var(--wp-accent-orange);
+    border-radius: 999px;
+    transition: width 0.35s ease;
 }
 
 /* ==========================================================================
@@ -469,6 +593,38 @@ a:hover {
 .btn-wp-primary:disabled {
     opacity: 0.65;
     cursor: not-allowed;
+}
+
+/* Vibrant Orange (#FF7A36) Primary CTA / Important Action Button */
+.btn-wp-accent {
+    background-color: var(--wp-accent-orange);
+    color: #ffffff;
+    border: 1px solid var(--wp-accent-orange);
+    font-weight: 600;
+    border-radius: var(--wp-radius-sm);
+    padding: 0.48rem 1rem;
+    box-shadow: 0 2px 6px rgba(255, 122, 54, 0.22);
+    transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
+}
+
+.btn-wp-accent:hover,
+.btn-wp-accent:focus {
+    background-color: var(--wp-accent-orange-hover);
+    border-color: var(--wp-accent-orange-hover);
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(255, 122, 54, 0.32);
+}
+
+.btn-wp-accent:active {
+    background-color: var(--wp-accent-orange-active);
+    border-color: var(--wp-accent-orange-active);
+    color: #ffffff;
+}
+
+.btn-wp-accent:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    box-shadow: none;
 }
 
 .btn-wp-secondary {
@@ -532,10 +688,17 @@ a:hover {
     align-items: center;
     gap: 0.4rem;
     cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .wp-theme-btn:hover {
     background-color: var(--wp-bg-active);
+    border-color: var(--wp-accent-orange-border);
+}
+
+.wp-theme-icon {
+    color: var(--wp-accent-orange);
+    font-size: 0.95rem;
 }
 
 /* Focus visibility */
@@ -546,6 +709,10 @@ select:focus-visible,
 textarea:focus-visible {
     outline: none;
     box-shadow: 0 0 0 3px var(--wp-focus-ring) !important;
+}
+
+.btn-wp-accent:focus-visible {
+    box-shadow: 0 0 0 3px var(--wp-accent-orange-ring) !important;
 }
 
 /* ==========================================================================
@@ -585,20 +752,32 @@ textarea:focus-visible {
     font-size: 0.78rem;
 }
 
-/* Field validation message (Blue-navy high-contrast notice per strict no-red accent rule) */
+/* Active / Selected Checkbox & Radio state in Vibrant Orange */
+.form-check-input:checked {
+    background-color: var(--wp-accent-orange);
+    border-color: var(--wp-accent-orange);
+}
+
+.form-check-input:focus {
+    border-color: var(--wp-accent-orange);
+    box-shadow: 0 0 0 3px var(--wp-accent-orange-ring);
+}
+
+/* Field validation message */
 .wp-field-error {
-    color: var(--wp-primary);
+    color: var(--wp-accent-orange-text);
     font-size: 0.8rem;
     font-weight: 600;
     margin-top: 0.25rem;
 }
 
 /* ==========================================================================
-   Status & Priority Badges (Blue/Slate spectrum only)
+   Status & Priority Badges
    ========================================================================== */
 .wp-badge {
     display: inline-flex;
     align-items: center;
+    gap: 0.32rem;
     padding: 0.22rem 0.65rem;
     border-radius: 999px;
     font-size: 0.75rem;
@@ -610,6 +789,15 @@ textarea:focus-visible {
 .wp-badge-ACTIVE {
     background-color: var(--wp-badge-active-bg);
     color: var(--wp-badge-active-text);
+}
+
+.wp-badge-ACTIVE::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--wp-accent-orange);
+    display: inline-block;
 }
 
 .wp-badge-COMPLETED {
@@ -633,6 +821,15 @@ textarea:focus-visible {
     color: var(--wp-badge-inprogress-text);
 }
 
+.wp-badge-IN_PROGRESS::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--wp-accent-orange);
+    display: inline-block;
+}
+
 .wp-badge-LOW {
     background-color: var(--wp-badge-priority-low-bg);
     color: var(--wp-badge-priority-low-text);
@@ -643,9 +840,17 @@ textarea:focus-visible {
     color: var(--wp-badge-priority-med-text);
 }
 
-.wp-badge-HIGH {
+/* High Priority & Attention Badge in Vibrant Orange (#FF7A36) */
+.wp-badge-HIGH,
+.wp-badge-ACCENT {
     background-color: var(--wp-badge-priority-high-bg);
     color: var(--wp-badge-priority-high-text);
+}
+
+.wp-badge-soft-orange {
+    background-color: var(--wp-accent-orange-soft);
+    color: var(--wp-accent-orange-text);
+    border: 1px solid var(--wp-accent-orange-border);
 }
 
 /* ==========================================================================
@@ -682,6 +887,12 @@ textarea:focus-visible {
 
 .wp-table tbody tr:hover {
     background-color: var(--wp-bg-hover);
+}
+
+/* Selected list-group row state (e.g., Add Members selection) */
+.list-group-item.wp-item-selected {
+    background-color: var(--wp-accent-orange-soft) !important;
+    border-color: var(--wp-accent-orange) !important;
 }
 
 /* ==========================================================================
@@ -839,6 +1050,7 @@ textarea:focus-visible {
 .wp-notice {
     background-color: var(--wp-notice-bg);
     border: 1px solid var(--wp-notice-border);
+    border-left: 4px solid var(--wp-accent-orange);
     color: var(--wp-notice-text);
     padding: 0.85rem 1rem;
     border-radius: var(--wp-radius-sm);
@@ -847,6 +1059,10 @@ textarea:focus-visible {
     align-items: flex-start;
     justify-content: space-between;
     gap: 0.75rem;
+}
+
+.wp-notice strong {
+    color: var(--wp-accent-orange);
 }
 
 .wp-empty-state {
@@ -866,6 +1082,10 @@ textarea:focus-visible {
     padding: 2rem 1rem;
     color: var(--wp-primary);
     font-weight: 600;
+}
+
+.wp-loading-state .spinner-border {
+    color: var(--wp-accent-orange);
 }
 
 /* Bootstrap Modal Dark/Light Theme Adaptation */

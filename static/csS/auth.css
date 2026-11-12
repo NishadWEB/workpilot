@@ -34,14 +34,26 @@
     max-width: 440px;
     background-color: var(--wp-bg-surface);
     border: 1px solid var(--wp-border);
+    border-top: 3px solid var(--wp-primary);
     border-radius: var(--wp-radius);
     box-shadow: var(--wp-shadow-md);
     padding: 2rem;
+    position: relative;
 }
 
 .wp-auth-header {
     text-align: center;
     margin-bottom: 1.5rem;
+}
+
+.wp-auth-header::after {
+    content: "";
+    display: block;
+    width: 40px;
+    height: 3px;
+    border-radius: 999px;
+    background-color: var(--wp-accent-orange);
+    margin: 0.75rem auto 0;
 }
 
 .wp-auth-title {

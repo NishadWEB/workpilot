@@ -13,10 +13,10 @@
             <div class="small text-muted" id="wpProjectsCountLabel">Loading projects...</div>
         </div>
 
-        <!-- Global MANAGER Only: Create Project Button -->
+        <!-- Global MANAGER Only: Create Project Primary CTA Button -->
         <button
             type="button"
-            class="btn btn-wp-primary d-none"
+            class="btn btn-wp-accent d-none"
             data-wp-manager-only
             data-bs-toggle="modal"
             data-bs-target="#wpCreateProjectModal"
@@ -107,7 +107,7 @@
     </div>
 </div>
 
-<!-- Create Project Modal (Section 13.2: Global Manager only, name max 10 chars, do not send users) -->
+<!-- Create Project Modal (Section 13.2: Global Manager only, name max 30 chars, do not send users) -->
 <div class="modal fade" id="wpCreateProjectModal" tabindex="-1" aria-labelledby="wpCreateProjectModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -168,7 +168,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-wp-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" id="wpCreateProjectSubmitBtn" class="btn btn-wp-primary">
+                    <button type="submit" id="wpCreateProjectSubmitBtn" class="btn btn-wp-accent">
                         Create Project
                     </button>
                 </div>

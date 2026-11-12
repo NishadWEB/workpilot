@@ -69,6 +69,14 @@
             setMetric("wpStatCompletedTasks", aggCompletedTasks);
             setMetric("wpStatOverdueTasks", aggOverdueTasks);
 
+            // Update overall completion progress bar
+            const overallPct =
+                aggTotalTasks > 0 ? Math.round((aggCompletedTasks / aggTotalTasks) * 100) : 0;
+            const progressBarEl = document.getElementById("wpDashboardProgressBar");
+            const progressPctEl = document.getElementById("wpDashboardProgressPct");
+            if (progressBarEl) progressBarEl.style.width = `${overallPct}%`;
+            if (progressPctEl) progressPctEl.textContent = `${overallPct}% Completed`;
+
             if (loadingEl) loadingEl.classList.add("d-none");
             if (contentEl) contentEl.classList.remove("d-none");
 
@@ -115,12 +123,19 @@
                         : 0;
 
                 const status = esc(projData.status || "ACTIVE");
+                const totalTasks = Number(ts.total_tasks || 0);
+                const completedTasks = Number(ts.completed_tasks || 0);
+                const overdueTasks = Number(ts.overdue_tasks || 0);
+                const projPct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
                 return `
                 <tr>
                     <td>
                         <a href="/projects/${projData.id}/" class="fw-bold text-wrap-safe">${esc(projData.name)}</a>
-                        <div class="small text-muted text-wrap-safe">${esc(projData.description || "")}</div>
+                        <div class="small text-muted text-wrap-safe mb-1">${esc(projData.description || "")}</div>
+                        <div class="wp-progress" style="max-width: 140px; height: 5px;" title="${projPct}% completed">
+                            <div class="wp-progress-bar" style="width: ${projPct}%;"></div>
+                        </div>
                     </td>
                     <td><span class="wp-badge wp-badge-${status}">${status}</span></td>
                     <td>${fmtDate(projData.deadline)}</td>
@@ -128,11 +143,15 @@
                         <div class="fw-semibold text-wrap-safe">${managerName}</div>
                         <div class="small text-muted">${totalMembers} member${totalMembers === 1 ? "" : "s"}</div>
                     </td>
-                    <td class="text-center fw-bold">${Number(ts.total_tasks || 0)}</td>
+                    <td class="text-center fw-bold">${totalTasks}</td>
                     <td class="text-center">${Number(ts.pending_tasks || 0)}</td>
                     <td class="text-center">${Number(ts.in_progress_tasks || 0)}</td>
-                    <td class="text-center">${Number(ts.completed_tasks || 0)}</td>
-                    <td class="text-center fw-semibold">${Number(ts.overdue_tasks || 0)}</td>
+                    <td class="text-center">${completedTasks}</td>
+                    <td class="text-center fw-semibold">${
+                        overdueTasks > 0
+                            ? `<span class="wp-badge wp-badge-soft-orange">${overdueTasks}</span>`
+                            : overdueTasks
+                    }</td>
                     <td class="text-end">
                         <div class="d-inline-flex gap-1">
                             <a href="/projects/${projData.id}/" class="btn btn-sm btn-wp-secondary">Overview</a>
