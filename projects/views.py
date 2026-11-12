@@ -142,7 +142,9 @@ class ProjectView(ModelViewSet):
     
     def get_queryset(self):
         print("fetching projects...")
-        return self.request.user.projects.filter(is_available=True)
+        projects =  self.request.user.projects.filter(is_available=True)
+        print(projects)
+        return projects
 
     def create(self, request, *args, **kwargs):
         manager_grp = Group.objects.get(id=3)
@@ -175,11 +177,15 @@ class ProjectView(ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         project = self.get_object()
-        project.is_available = False
 
-        ProjectMembership.objects.filter(project_id=project.id).delete()
-        
-        project.save()
+        with transaction.atomic():
+            project.is_available = False
+
+            ProjectMembership.objects.filter(project_id=project.id).delete()
+            Task.objects.filter(project_id=project.id).delete()
+            
+            project.save()
+
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -332,25 +338,6 @@ class TaskView(ModelViewSet):
 
         return Task.objects.filter(assignee=user)
 
-    @extend_schema(
-        summary="Update task details",
-        description="""
-        Allows project managers to update task details.
-
-        Managers can update title, description, project,
-        priority, assignee, and due date.
-
-        Task status cannot be updated through this endpoint.
-        Members must use the dedicated task status endpoint.
-        """,
-        request=TaskSerializer,
-        responses={
-            200: TaskSerializer,
-            400: OpenApiResponse(description="Validation errors."),
-            403: OpenApiResponse(description="Permission denied."),
-            404: OpenApiResponse(description="Task not found."),
-        }
-    )
     def partial_update(self, request, *args, **kwargs):
         return super().partial_update(request, *args, **kwargs)
 

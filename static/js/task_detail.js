@@ -555,6 +555,13 @@
 
         if (!form || !input) return;
 
+        input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                form.requestSubmit();
+            }
+        });
+
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
             if (!taskId) return;
